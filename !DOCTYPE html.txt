@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Vegetarian Diet Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #a8e6cf 0%, #56c596 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #2d3436;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  }
+  h1 { text-align: center; color: #1e6f5c; margin-bottom: 6px; font-size: 1.7rem; }
+  .date { text-align: center; color: #777; margin-bottom: 20px; font-size: 0.9rem; }
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    flex: 1;
+    background: #f0faf5;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    border: 2px solid #d4f1e2;
+  }
+  .stat-value { font-size: 1.6rem; font-weight: 700; color: #1e6f5c; }
+  .stat-label { font-size: 0.78rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .progress-wrap {
+    background: #e8f5ee;
+    border-radius: 20px;
+    height: 22px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #56c596, #1e6f5c);
+    width: 0%;
+    transition: width 0.4s ease;
+    border-radius: 20px;
+  }
+  .meal {
+    background: #fafafa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid #56c596;
+  }
+  .meal-title { font-weight: 600; color: #1e6f5c; margin-bottom: 10px; font-size: 1rem; }
+  select {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px solid #d4f1e2;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fff;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  .check-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #1e6f5c;
+    cursor: pointer;
+  }
+  .check-row label { flex: 1; font-size: 0.92rem; cursor: pointer; }
+  .check-row.done label { text-decoration: line-through; color: #888; }
+  .reset-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    background: #ff6b6b;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .reset-btn:hover { background: #ee5253; }
+  @media (max-width: 480px) {
+    .container { padding: 18px; }
+    h1 { font-size: 1.4rem; }
+    .stat-value { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌱 Daily Diet Tracker</h1>
+  <div class="date" id="date"></div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value"><span id="protein">0</span>g</div>
+      <div class="stat-label">Protein</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value"><span id="completed">0</span>/<span id="total">0</span></div>
+      <div class="stat-label">Completed</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+  <div id="meals"></div>
+
+  <button class="reset-btn" onclick="resetDay()">Reset Today's Progress</button>
+</div>
+
+<script>
+const meals = [
+  {
+    id: 'earlyMorning',
+    title: '🌅 Early Morning',
+    fixed: true,
+    options: [{ name: 'Matcha tea, oats, and half a banana', protein: 6 }]
+  },
+  {
+    id: 'breakfast',
+    title: '🍳 Breakfast',
+    options: [
+      { name: 'Avocado toast and Greek yogurt', protein: 12 },
+      { name: 'Chickpea pancakes', protein: 10 }
+    ]
+  },
+  {
+    id: 'lunch',
+    title: '🥗 Lunch',
+    options: [
+      { name: 'Handmade paneer burger and side salad', protein: 20 },
+      { name: 'Tofu wrap and side salad', protein: 18 }
+    ]
+  },
+  {
+    id: 'eveningSnack',
+    title: '🍵 Evening Snack',
+    fixed: true,
+    options: [{ name: 'Matcha tea and roasted chickpeas', protein: 5 }]
+  },
+  {
+    id: 'dinner',
+    title: '🍛 Dinner',
+    options: [
+      { name: 'Chapatis, subzi, and dal', protein: 15 },
+      { name: 'Roasted vegetable and paneer salad', protein: 12 }
+    ]
+  },
+  {
+    id: 'night',
+    title: '🌙 Night',
+    fixed: true,
+    options: [{ name: 'Herbal tea', protein: 0 }]
+  }
+];
+
+const todayKey = 'dietTracker_' + new Date().toISOString().slice(0, 10);
+let state = JSON.parse(localStorage.getItem(todayKey) || '{}');
+
+document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
+
+function render() {
+  const container = document.getElementById('meals');
+  container.innerHTML = '';
+  meals.forEach(meal => {
+    if (!state[meal.id]) state[meal.id] = { choice: 0, done: false };
+    const div = document.createElement('div');
+    div.className = 'meal';
+    let html = `<div class="meal-title">${meal.title}</div>`;
+    if (!meal.fixed) {
+      html += `<select onchange="updateChoice('${meal.id}', this.value)">`;
+      meal.options.forEach((o, i) => {
+        html += `<option value="${i}" ${state[meal.id].choice == i ? 'selected' : ''}>${o.name} (${o.protein}g protein)</option>`;
+      });
+      html += `</select>`;
+    }
+    const opt = meal.options[state[meal.id].choice];
+    html += `<div class="check-row ${state[meal.id].done ? 'done' : ''}">
+      <input type="checkbox" id="chk_${meal.id}" ${state[meal.id].done ? 'checked' : ''} onchange="toggleDone('${meal.id}', this.checked)">
+      <label for="chk_${meal.id}">${meal.fixed ? opt.name : 'Mark as eaten'} — ${opt.protein}g protein</label>
+    </div>`;
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+  updateStats();
+  save();
+}
+
+function updateChoice(id, val) {
+  state[id].choice = parseInt(val);
+  render();
+}
+
+function toggleDone(id, checked) {
+  state[id].done = checked;
+  render();
+}
+
+function updateStats() {
+  let protein = 0, done = 0;
+  meals.forEach(m => {
+    if (state[m.id].done) {
+      done++;
+      protein += m.options[state[m.id].choice].protein;
+    }
+  });
+  document.getElementById('protein').textContent = protein;
+  document.getElementById('completed').textContent = done;
+  document.getElementById('total').textContent = meals.length;
+  document.getElementById('progressBar').style.width = (done / meals.length * 100) + '%';
+}
+
+function save() {
+  localStorage.setItem(todayKey, JSON.stringify(state));
+}
+
+function resetDay() {
+  if (confirm("Reset today's progress?")) {
+    state = {};
+    localStorage.removeItem(todayKey);
+    render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
